@@ -1,31 +1,301 @@
-name: CI
+# ============================================================================
+# CI Pipeline Quality Gate — 5-job evidence chain for tendem-scraper
+#
+# Chain:  test  →  verify  →  metrics  →  publish  →  gate
+#         ▲         ▲           ▲            ▲          ▲
+#         |         |           |            |          |
+#      unit      checksum    quality     Allure      final
+#      tests     chain       metrics     to Pages    verdict
+#
+# The final `gate` job has NO `if: always()` — it depends purely on the
+# upstream jobs succeeding. If any of them fail, the gate is skipped and
+# the workflow turns red. That is what a real quality gate looks like.
+# ============================================================================
 
-on: [push, pull_request]
+name: CI Pipeline Quality Gate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Default least-privilege; individual jobs request more when needed.
+permissions:
+  contents: read
 
 jobs:
+
+  # ────────────────────────────────────────────────────────────────
+  # 1. TEST — run pytest, generate HTML report, upload ALL evidence
+  # ────────────────────────────────────────────────────────────────
   test:
+    name: "1 · test"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with: { python-version: "3.11" }
-      - run: pip install -e ".[dev]"
-      - run: ruff check src tests
-      - run: mypy src || true
-      - run: pytest --cov=tendem_scraper --cov-report=xml --alluredir=allure-results
-      - uses: actions/upload-artifact@v4
-        if: always()
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.12
+        uses: actions/setup-python@v5
         with:
-          name: allure-results
-          path: allure-results
-      - uses: simple-elf/allure-report-action@master
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev,cloud,llm]"
+          playwright install --with-deps chromium
+
+      - name: Lint (ruff)
+        run: ruff check src tests
+
+      - name: Run pytest with coverage + HTML report
+        run: |
+          mkdir -p artifacts/reports
+          pytest -v \
+            --cov=tendem_scraper \
+            --cov-report=xml:artifacts/reports/coverage.xml \
+            --cov-report=html:artifacts/reports/coverage_html \
+            --html=artifacts/reports/pytest_report.html \
+            --self-contained-html \
+            --alluredir=artifacts/allure-results
+
+      - name: Write run manifest
         if: always()
+        run: |
+          mkdir -p artifacts
+          {
+            echo "{"
+            echo "  \"commit\": \"$GITHUB_SHA\","
+            echo "  \"run_id\": \"$GITHUB_RUN_ID\","
+            echo "  \"run_number\": \"$GITHUB_RUN_NUMBER\","
+            echo "  \"actor\": \"$GITHUB_ACTOR\","
+            echo "  \"python\": \"$(python --version 2>&1)\","
+            echo "  \"pytest_exit\": \"${{ job.status }}\""
+            echo "}"
+          } > artifacts/run_manifest.json
+
+      - name: Compute SHA-256 checksums (chain of custody)
+        if: always()
+        run: |
+          cd artifacts
+          find . -type f -print0 | sort -z | xargs -0 sha256sum > checksums.sha256
+          cat checksums.sha256
+
+      - name: Upload evidence artifact
+        if: always()
+        uses: actions/upload-artifact@v4
         with:
-          allure_results: allure-results
+          name: ci-evidence
+          path: artifacts/
+          retention-days: 14
+
+  # ────────────────────────────────────────────────────────────────
+  # 2. VERIFY — download artifacts, verify SHA-256 chain of custody
+  # ────────────────────────────────────────────────────────────────
+  verify:
+    name: "2 · verify"
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download evidence artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ci-evidence
+          path: downloaded-artifacts
+
+      - name: Verify SHA-256 checksums
+        run: |
+          cd downloaded-artifacts
+          sha256sum -c checksums.sha256
+
+      - name: Assert required evidence files exist
+        run: |
+          set -e
+          test -f downloaded-artifacts/reports/pytest_report.html \
+            && echo "✓ pytest_report.html present"
+          test -f downloaded-artifacts/reports/coverage.xml \
+            && echo "✓ coverage.xml present"
+          test -f downloaded-artifacts/run_manifest.json \
+            && echo "✓ run_manifest.json present"
+          test -d downloaded-artifacts/allure-results \
+            && echo "✓ allure-results present"
+
+  # ────────────────────────────────────────────────────────────────
+  # 3. METRICS — quality metrics gate (coverage % + test count)
+  # ────────────────────────────────────────────────────────────────
+  metrics:
+    name: "3 · metrics"
+    needs: verify
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Download evidence artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ci-evidence
+          path: downloaded-artifacts
+
+      - name: Extract metrics from coverage.xml
+        id: coverage
+        run: |
+          python - <<'PY'
+          import xml.etree.ElementTree as ET, sys, os, json
+          tree = ET.parse("downloaded-artifacts/reports/coverage.xml")
+          root = tree.getroot()
+          line_rate = float(root.attrib.get("line-rate", "0"))
+          branch_rate = float(root.attrib.get("branch-rate", "0"))
+          pct = round(line_rate * 100, 2)
+          br = round(branch_rate * 100, 2)
+          print(f"line_coverage={pct}")
+          print(f"branch_coverage={br}")
+          with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+              f.write(f"line_coverage={pct}\n")
+              f.write(f"branch_coverage={br}\n")
+          PY
+
+      - name: Count tests from Allure results
+        id: allure_count
+        run: |
+          python - <<'PY'
+          import json, glob, os
+          total = passed = failed = skipped = 0
+          for f in glob.glob("downloaded-artifacts/allure-results/*-result.json"):
+              with open(f) as fh:
+                  d = json.load(fh)
+              total += 1
+              st = d.get("status", "unknown")
+              if st == "passed": passed += 1
+              elif st == "failed": failed += 1
+              elif st == "skipped": skipped += 1
+          print(f"total={total} passed={passed} failed={failed} skipped={skipped}")
+          with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+              f.write(f"total={total}\n")
+              f.write(f"passed={passed}\n")
+              f.write(f"failed={failed}\n")
+              f.write(f"skipped={skipped}\n")
+          PY
+
+      - name: Publish metrics summary
+        run: |
+          {
+            echo "## 📊 Quality Metrics"
+            echo ""
+            echo "| Metric | Value |"
+            echo "|---|---|"
+            echo "| Line coverage | ${{ steps.coverage.outputs.line_coverage }}% |"
+            echo "| Branch coverage | ${{ steps.coverage.outputs.branch_coverage }}% |"
+            echo "| Tests total | ${{ steps.allure_count.outputs.total }} |"
+            echo "| Tests passed | ${{ steps.allure_count.outputs.passed }} |"
+            echo "| Tests failed | ${{ steps.allure_count.outputs.failed }} |"
+            echo "| Tests skipped | ${{ steps.allure_count.outputs.skipped }} |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Enforce quality thresholds
+        run: |
+          set -e
+          LINE="${{ steps.coverage.outputs.line_coverage }}"
+          FAILED="${{ steps.allure_count.outputs.failed }}"
+
+          echo "line coverage = ${LINE}%"
+          echo "failed tests  = ${FAILED}"
+
+          # -------- THRESHOLDS (edit here to tune the gate) --------
+          MIN_LINE_COVERAGE=70
+          MAX_FAILED_TESTS=0
+          # ---------------------------------------------------------
+
+          python - <<PY
+          line = float("${LINE}")
+          failed = int("${FAILED}")
+          min_cov = ${MIN_LINE_COVERAGE}
+          max_fail = ${MAX_FAILED_TESTS}
+
+          ok = True
+          if line < min_cov:
+              print(f"❌ Coverage {line}% below minimum {min_cov}%")
+              ok = False
+          else:
+              print(f"✅ Coverage {line}% >= {min_cov}%")
+
+          if failed > max_fail:
+              print(f"❌ Failed tests {failed} > max {max_fail}")
+              ok = False
+          else:
+              print(f"✅ Failed tests {failed} <= {max_fail}")
+
+          raise SystemExit(0 if ok else 1)
+          PY
+
+  # ────────────────────────────────────────────────────────────────
+  # 4. PUBLISH — push Allure report to gh-pages (main branch only)
+  # ────────────────────────────────────────────────────────────────
+  publish:
+    name: "4 · publish allure"
+    needs: metrics
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download evidence artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ci-evidence
+          path: downloaded-artifacts
+
+      - name: Generate Allure report
+        uses: simple-elf/allure-report-action@master
+        with:
+          allure_results: downloaded-artifacts/allure-results
           allure_history: allure-history
-      - uses: peaceiris/actions-gh-pages@v4
-        if: github.ref == 'refs/heads/main'
+          keep_reports: 20
+
+      - name: Publish Allure report to gh-pages
+        uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
           publish_dir: allure-history
+          user_name: "github-actions[bot]"
+          user_email: "github-actions[bot]@users.noreply.github.com"
+          commit_message: "ci: publish allure report for ${{ github.sha }}"
+
+  # ────────────────────────────────────────────────────────────────
+  # 5. GATE — final verdict, no `if: always()`, must pass
+  # ────────────────────────────────────────────────────────────────
+  gate:
+    name: "5 · gate"
+    needs: [test, verify, metrics]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Final quality gate
+        run: |
+          echo "=================================================="
+          echo "  CI PIPELINE QUALITY GATE"
+          echo "=================================================="
+          echo ""
+          echo "  Lint (ruff)          : PASS ✅"
+          echo "  Test execution       : PASS ✅"
+          echo "  Evidence upload      : PASS ✅"
+          echo "  SHA-256 verification : PASS ✅"
+          echo "  Coverage threshold   : PASS ✅"
+          echo "  Failed tests         : 0 ✅"
+          echo ""
+          echo "  FINAL GATE: PASS ✅"
+          echo "=================================================="
