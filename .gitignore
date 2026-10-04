@@ -16,3 +16,5 @@ venv/
 dist/
 build/
 *.egg-info/
+service_menu.md
+intake_reply.txt
