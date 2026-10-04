@@ -1,0 +1,22 @@
+services:
+  scraper:
+    build: .
+    image: tendem-scraper:2.0.0
+    environment:
+      - TS_HEADLESS=true
+      - TS_CONCURRENCY=8
+      - TS_DELAY_SECONDS=1
+    volumes:
+      - ./reports:/app/reports
+      - ./allure-results:/app/allure-results
+      - ./sessions:/app/sessions
+    command:
+      - "https://books.toscrape.com/"
+      - "--crawl"
+      - "--crawl-max"
+      - "30"
+      - "--concurrency"
+      - "6"
+      - "--format"
+      - "csv,json,sqlite"
+      - "--dedupe"
