@@ -9,7 +9,7 @@ description = "Production POM web-scraping framework — auto-presets, crawl mod
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
-authors = [{ name = "Your Name", email = "you@example.com" }]
+authors = [{ name = "Pran", email = "you@example.com" }]
 keywords = ["scraping", "playwright", "pom", "allure", "crawler", "shopify", "automation"]
 
 dependencies = [
@@ -26,9 +26,9 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-llm    = ["httpx>=0.27"]
-cloud  = ["boto3>=1.34"]
-dev    = [
+llm   = ["httpx>=0.27"]
+cloud = ["boto3>=1.34"]
+dev   = [
     "pytest>=8.0",
     "pytest-cov>=5.0",
     "pytest-asyncio>=0.23",
@@ -43,30 +43,53 @@ tendem-scrape = "tendem_scraper.cli:main"
 [tool.setuptools.packages.find]
 where = ["src"]
 
+# ------------------------------------------------------------------ ruff
 [tool.ruff]
-line-length = 110
+line-length = 120
 target-version = "py310"
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "UP", "B", "S", "PL", "RUF"]
+# Core rule families: style + errors + bugs + security + pylint + refactor.
+select = ["E", "F", "I", "UP", "B", "S", "PL", "RUF", "PLC", "PLR", "PLW"]
 
-# Rules intentionally ignored in this project (with reasons):
+# Rules intentionally ignored in this project (with reasons).
 ignore = [
-    "BLE001",   # blind "except Exception" — required for resilient scraping (network, browser, HTML all fail unpredictably)
-    "DTZ005",   # datetime.now() without tz — report stamps are local-time by design
-    "DTZ003",   # datetime.utcnow() — checkpoint timestamps use UTC by convention
-    "S110",     # try-except-pass — intentional best-effort cleanup
-    "S112",     # try-except-continue — intentional per-page skip
-    "B023",     # closure over loop var — intentional, `html` is bound per iteration
-    "PLW0602",  # global without assignment — only reading `_T0`
-    "FURB167",  # re.I alias — style preference
+    # --- deliberate exception handling in a resilient scraper ---
+    "BLE001",   # blind "except Exception" — network/browser/HTML all fail unpredictably
+    "S110",     # try-except-pass — best-effort cleanup
+    "S112",     # try-except-continue — per-page skip
+    "S324",     # sha1 — used only for dedupe fingerprints, never for security
+
+    # --- datetime usage is deliberate ---
+    "DTZ005",   # datetime.now() — local-time stamps for reports
+    "DTZ003",   # datetime.utcnow() — UTC stamps for checkpoints
+
+    # --- style / readability choices ---
+    "E741",     # ambiguous 'l' — readable in tight link loops
+    "E731",     # lambda assigned to name — esc helper is clearer as lambda
+    "FURB167",  # re.I / re.S aliases — style preference
     "UP035",    # typing.Iterable — style preference
     "RUF100",   # unused noqa — harmless
+    "RUF001",   # ambiguous unicode in NEXT_TEXT — » and › are intentional
+    "EXE001",   # shebang on Windows files
+
+    # --- deliberate code structure in a CLI orchestrator ---
+    "B007",     # unused loop var — kept for readability
+    "B023",     # closure over loop var — html bound per iteration
+    "PLC0415",  # imports inside functions — lazy optional deps (boto3, httpx, playwright)
+    "PLR0912",  # too many branches — CLI dispatcher
+    "PLR0913",  # too many args — Fetcher/Pipeline constructors
+    "PLR0915",  # too many statements — _finalise orchestration
+    "PLR0917",  # too many positional — same as above
+    "PLR2004",  # magic values — 400, 200, 15 are self-documenting here
+    "PLW0602",  # global read without assignment — only reading _T0
+    "PLW0603",  # global assignment — deliberate for _T0 and _JSON_PATH
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/*" = ["S101"]   # assert is fine in tests
+"tests/*" = ["S101", "PLR2004", "E741"]
 
+# ------------------------------------------------------------------ mypy
 [tool.mypy]
 python_version = "3.10"
 ignore_missing_imports = true
