@@ -1,3 +1,4 @@
+# ruff: noqa: E501
 """HTML report — sortable, filterable, dark mode."""
 from __future__ import annotations
 
@@ -45,7 +46,9 @@ document.querySelectorAll('input.flt').forEach(function(inp){inp.addEventListene
   Array.prototype.forEach.call(t.tBodies[0].rows,function(r){r.hidden=r.textContent.toLowerCase().indexOf(q)<0});});});
 """
 
-esc = lambda s: H.escape(str(s), quote=True)
+
+def esc(s) -> str:
+    return H.escape(str(s), quote=True)
 
 
 def _short(s, n=80):
@@ -126,7 +129,7 @@ def build_html_report(meta: RunMeta, result) -> str:
             ("page", "Page", "text"), ("text", "Text", "text"),
             ("href", "URL", "link"), ("type", "Type", "text"),
             ("status", "Status", "badge"), ("detail", "Code", "text")],
-            [l.model_dump() for l in links], 1000))
+            [row.model_dump() for row in links], 1000))
 
     if images:
         sec("images", f"Images ({len(images)})", _table("t-images", [

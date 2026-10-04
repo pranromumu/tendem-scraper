@@ -55,14 +55,16 @@ def write_sqlite(path: Path, result, meta: RunMeta) -> None:
                          for i in result.items])
         cur.execute("CREATE TABLE links (page INT, text TEXT, href TEXT, type TEXT, status TEXT, detail TEXT)")
         cur.executemany("INSERT INTO links VALUES (?,?,?,?,?,?)",
-                        [(l.page, l.text, l.href, l.type, l.status, l.detail) for l in result.links])
+                        [(row.page, row.text, row.href, row.type, row.status, row.detail)
+                         for row in result.links])
         cur.execute("CREATE TABLE images (page INT, src TEXT, alt TEXT, alt_state TEXT, width TEXT, height TEXT)")
         cur.executemany("INSERT INTO images VALUES (?,?,?,?,?,?)",
                         [(i.page, i.src, i.alt, i.alt_state, i.width, i.height) for i in result.images])
         cur.execute("CREATE TABLE headings (page INT, level INT, text TEXT)")
         cur.executemany("INSERT INTO headings VALUES (?,?,?)",
                         [(h.page, h.level, h.text) for h in result.headings])
-        cur.execute("CREATE TABLE qa_issues (page TEXT, severity TEXT, check_name TEXT, detail TEXT, where_clause TEXT)")
+        cur.execute("CREATE TABLE qa_issues "
+                    "(page TEXT, severity TEXT, check_name TEXT, detail TEXT, where_clause TEXT)")
         cur.executemany("INSERT INTO qa_issues VALUES (?,?,?,?,?)",
                         [(str(i.page), i.severity, i.check, i.detail, i.where) for i in result.issues])
         cur.execute("CREATE TABLE run_meta (url TEXT, host TEXT, when_ts TEXT, method TEXT, secs REAL, "
@@ -94,7 +96,7 @@ def export_all(out_dir: Path, result, meta: RunMeta, formats: set[str]) -> dict[
         write_csv(out_dir / "qa_issues.csv", issues)
         for n, t in enumerate(result.tables, 1):
             header = [h or f"col_{i+1}" for i, h in enumerate(t.header)]
-            rows = [dict(zip(header, r)) for r in t.rows]
+            rows = [dict(zip(header, r, strict=False)) for r in t.rows]
             write_csv(out_dir / "tables" / f"table_{n}.csv", rows)
         out["csv_dir"] = out_dir
 
