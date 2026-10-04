@@ -1,4 +1,0 @@
-07:32:52   crawled          1/10  https://example.com
-07:32:52   crawled          2/10  https://example.com/a
-07:32:52   crawled          3/10  https://example.com/b
-07:32:52   crawled          4/10  https://example.com/c
