@@ -1,4 +1,3 @@
-from pathlib import Path
 from tendem_scraper.core import session as s
 
 

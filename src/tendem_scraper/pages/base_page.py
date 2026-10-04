@@ -1,13 +1,14 @@
 """BasePage — POM root."""
 from __future__ import annotations
+
 from abc import ABC, abstractmethod
+
 from bs4 import BeautifulSoup
 
-from ..core.extractors import (extract_links, extract_images,
-                               extract_headings, extract_tables, find_next)
-from ..core.validators import qa_issues
+from ..core.extractors import extract_headings, extract_images, extract_links, extract_tables, find_next
 from ..core.presets import Preset
-from ..models import Item, LinkRow, ImageRow, HeadingRow, TableBlock, QAIssue
+from ..core.validators import qa_issues
+from ..models import HeadingRow, ImageRow, Item, LinkRow, QAIssue, TableBlock
 
 
 class BasePage(ABC):
@@ -36,7 +37,7 @@ class BasePage(ABC):
         self.selector = ""
         self.candidates: list[dict] = []
 
-    def load(self, url: str, pageno: int = 1) -> "BasePage":
+    def load(self, url: str, pageno: int = 1) -> BasePage:
         self.url = url
         self.pageno = pageno
         self.html, self.final_url, self.method = self.fetcher.get(url)

@@ -7,11 +7,11 @@ Workflow:
         → headless run that reuses the cookies (no login needed)
 """
 from __future__ import annotations
+
 from pathlib import Path
 
 from ..config import settings
 from . import logging as log
-
 
 SESSION_DIR = Path(settings.session_dir)
 

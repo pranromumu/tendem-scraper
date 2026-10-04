@@ -1,6 +1,10 @@
 from bs4 import BeautifulSoup
+
 from tendem_scraper.core.extractors import (
-    extract_links, extract_images, find_item_groups, clean,
+    clean,
+    extract_images,
+    extract_links,
+    find_item_groups,
 )
 
 

@@ -1,17 +1,20 @@
 """Unified fetcher: local file → static HTTP → Playwright headless → visible."""
 from __future__ import annotations
-import os, re
+
+import os
+import re
 from pathlib import Path
 from urllib import robotparser
 from urllib.parse import urlparse
 
 import requests
-from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
+from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 
 from ..config import settings
 from . import logging as log
-from .proxy import ProxyPool
 from . import session as session_mod
+from .proxy import ProxyPool
+
 # Backwards-compatible alias — some modules (cli.py, webhook.py) import UA.
 UA = settings.user_agent
 
@@ -53,13 +56,13 @@ def robots_allows(url: str) -> bool:
 
 def _blocked(html: str) -> bool:
     head = html[:4000].lower()
-    m = re.search(r"<title[^>]*>(.*?)</title>", html, re.I | re.S)
+    m = re.search(r"<title[^>]*>(.*?)</title>", html, re.IGNORECASE | re.DOTALL)
     return any(h in (m.group(1).lower() if m else "") + head for h in BLOCK_HINTS)
 
 
 def _thin(html: str) -> bool:
     from bs4 import BeautifulSoup
-    interactive = len(re.findall(r"<(?:a|input|button|select|textarea)\b", html, re.I))
+    interactive = len(re.findall(r"<(?:a|input|button|select|textarea)\b", html, re.IGNORECASE))
     text = " ".join(BeautifulSoup(html, "lxml").get_text(" ").split())
     return interactive < 5 and len(text) < 200
 

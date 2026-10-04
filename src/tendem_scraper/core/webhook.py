@@ -1,7 +1,7 @@
 """Notify Slack / Discord when a run finishes. Silent if not configured."""
 from __future__ import annotations
+
 import json
-from urllib.parse import urlparse
 
 import requests
 

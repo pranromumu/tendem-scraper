@@ -47,6 +47,26 @@ where = ["src"]
 line-length = 110
 target-version = "py310"
 
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "S", "PL", "RUF"]
+
+# Rules intentionally ignored in this project (with reasons):
+ignore = [
+    "BLE001",   # blind "except Exception" — required for resilient scraping (network, browser, HTML all fail unpredictably)
+    "DTZ005",   # datetime.now() without tz — report stamps are local-time by design
+    "DTZ003",   # datetime.utcnow() — checkpoint timestamps use UTC by convention
+    "S110",     # try-except-pass — intentional best-effort cleanup
+    "S112",     # try-except-continue — intentional per-page skip
+    "B023",     # closure over loop var — intentional, `html` is bound per iteration
+    "PLW0602",  # global without assignment — only reading `_T0`
+    "FURB167",  # re.I alias — style preference
+    "UP035",    # typing.Iterable — style preference
+    "RUF100",   # unused noqa — harmless
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S101"]   # assert is fine in tests
+
 [tool.mypy]
 python_version = "3.10"
 ignore_missing_imports = true

@@ -1,20 +1,21 @@
 """Reusable extractors → pydantic models."""
 from __future__ import annotations
+
 import re
 from collections import OrderedDict
 from urllib.parse import urljoin, urlparse
 
 from bs4 import BeautifulSoup
 
-from ..models import LinkRow, ImageRow, HeadingRow, TableBlock, Item
+from ..models import HeadingRow, ImageRow, Item, LinkRow, TableBlock
 
 PRICE = re.compile(
     r"(?:[$€£¥₹]|\b(?:USD|MYR|RM|Rs\.?|INR|EUR|GBP))\s?\d[\d,]*(?:\.\d+)?"
-    r"|\d[\d,]*(?:\.\d+)?\s?(?:USD|MYR|RM|€|£)", re.I)
+    r"|\d[\d,]*(?:\.\d+)?\s?(?:USD|MYR|RM|€|£)", re.IGNORECASE)
 
 GENERIC = re.compile(
     r"^(add to (cart|bag|basket)|view( product| details| more)?|buy( now)?|read more|"
-    r"learn more|details|more|shop now|quick view|see more|select options|sign ?up|log ?in)$", re.I)
+    r"learn more|details|more|shop now|quick view|see more|select options|sign ?up|log ?in)$", re.IGNORECASE)
 
 NEXT_TEXT = {"next", "next page", "next »", "next ›", "›", "»", ">", ">>", "older", "older posts"}
 SKIP_PARENTS = {"html", "head", "script", "style", "svg", "table", "thead", "tbody",

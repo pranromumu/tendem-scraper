@@ -1,7 +1,8 @@
 """Round-robin proxy rotation."""
 from __future__ import annotations
+
 import itertools
-from typing import Iterable
+from collections.abc import Iterable
 
 
 class ProxyPool:

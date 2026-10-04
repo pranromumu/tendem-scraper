@@ -8,7 +8,8 @@ Each preset defines:
     paginate_param URL param fallback (?page=N)
 """
 from __future__ import annotations
-from dataclasses import dataclass, field
+
+from dataclasses import dataclass
 
 
 @dataclass(frozen=True)

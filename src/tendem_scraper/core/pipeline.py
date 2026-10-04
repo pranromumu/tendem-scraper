@@ -1,13 +1,14 @@
 """Pipeline: run a Page Object across N pages."""
 from __future__ import annotations
+
 import time
 from dataclasses import dataclass, field
 
+from ..config import settings
+from ..models import HeadingRow, ImageRow, Item, LinkRow, QAIssue, TableBlock
+from ..pages.base_page import BasePage
 from . import logging as log
 from .fetcher import Fetcher, FetchError, robots_allows
-from ..pages.base_page import BasePage
-from ..models import Item, LinkRow, ImageRow, HeadingRow, TableBlock, QAIssue
-from ..config import settings
 
 
 @dataclass

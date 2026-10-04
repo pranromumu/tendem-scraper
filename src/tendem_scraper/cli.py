@@ -27,7 +27,12 @@ tendem-scrape URL --crawl --dedupe --validate --s3 --webhook https://hooks.slack
 tendem-scrape URL --codegen
 """
 from __future__ import annotations
-import argparse, os, re, sys, time, webbrowser
+
+import argparse
+import re
+import sys
+import time
+import webbrowser
 from collections import OrderedDict
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
@@ -41,18 +46,18 @@ from rich.table import Table
 from .config import settings
 from .core import logging as log
 from .core import session as session_mod
+from .core import storage, webhook
 from .core.allure_hooks import allure_step, attach_csv, attach_html, attach_json
 from .core.concurrency import map_concurrent  # noqa: F401  (kept for future crawl parallelism)
 from .core.crawler import crawl_urls
 from .core.dedupe import dedupe_items
 from .core.exporters import export_all, write_manifest
-from .core.fetcher import Fetcher, FetchError, UA
+from .core.fetcher import UA, Fetcher, FetchError
 from .core.fingerprint import detect_preset
 from .core.pipeline import Pipeline
 from .core.presets import get_preset, list_presets
 from .core.reporter import write_html_report
 from .core.resume import Checkpoint
-from .core import storage, webhook
 from .models import QAIssue, RunMeta
 from .pages.registry import PAGE_REGISTRY
 
@@ -240,10 +245,16 @@ def _run_crawl(a, page_cls, page_kwargs) -> int:
     log.info(f"Crawl collected {len(pages)} page(s)")
 
     from bs4 import BeautifulSoup
-    from .core.extractors import (extract_links, extract_images,   # noqa: F401
-                                  extract_headings, extract_tables, find_next)  # noqa: F401
-    from .core.validators import qa_issues
+
+    from .core.extractors import (  # noqa: F401
+        extract_headings,
+        extract_images,
+        extract_links,
+        extract_tables,
+        find_next,
+    )
     from .core.pipeline import RunResult
+    from .core.validators import qa_issues
 
     rr = RunResult()
     PageCls = page_cls

@@ -1,8 +1,9 @@
 """GenericListingPage — auto-detects the main repeating block OR uses a preset."""
 from __future__ import annotations
-from .base_page import BasePage
-from ..core.extractors import find_item_groups, extract_item
+
+from ..core.extractors import extract_item, find_item_groups
 from ..core.presets import Preset
+from .base_page import BasePage
 
 
 class GenericListingPage(BasePage):

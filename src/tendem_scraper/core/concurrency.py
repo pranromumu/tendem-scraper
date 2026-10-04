@@ -5,8 +5,10 @@ static HTTP only (which is correct for crawl mode anyway — crawl uses
 the static path, and per-URL Playwright would need one browser per thread).
 """
 from __future__ import annotations
+
+from collections.abc import Callable, Iterable
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import Callable, Iterable, TypeVar
+from typing import TypeVar
 
 T = TypeVar("T")
 R = TypeVar("R")

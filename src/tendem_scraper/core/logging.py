@@ -1,8 +1,12 @@
 """Rich console + optional JSON-lines sink."""
 from __future__ import annotations
-import json, sys, time
+
+import json
+import sys
+import time
 from datetime import datetime, timezone
 from pathlib import Path
+
 from rich.console import Console
 
 console = Console(highlight=False, soft_wrap=True, file=sys.stdout)

@@ -1,5 +1,6 @@
 """Cross-page deduplication using a stable fingerprint."""
 from __future__ import annotations
+
 import hashlib
 from urllib.parse import urlparse
 

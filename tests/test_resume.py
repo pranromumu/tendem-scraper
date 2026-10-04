@@ -1,5 +1,6 @@
 """Tests for checkpoint / resume."""
 from pathlib import Path
+
 from tendem_scraper.core.resume import Checkpoint
 
 

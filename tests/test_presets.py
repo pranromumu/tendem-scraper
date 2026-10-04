@@ -1,5 +1,6 @@
 import pytest
-from tendem_scraper.core.presets import get_preset, list_presets, PRESETS
+
+from tendem_scraper.core.presets import PRESETS, get_preset, list_presets
 
 
 def test_all_presets_registered():

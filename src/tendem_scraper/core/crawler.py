@@ -1,13 +1,13 @@
 """Whole-site crawler — BFS from a seed URL, respecting host + robots + limits."""
 from __future__ import annotations
+
 from collections import deque
-from urllib.parse import urlparse, urldefrag
+from urllib.parse import urldefrag, urlparse
 
 from bs4 import BeautifulSoup
 
 from . import logging as log
 from .fetcher import Fetcher, FetchError, robots_allows
-from ..config import settings
 
 
 def _norm(u: str) -> str:

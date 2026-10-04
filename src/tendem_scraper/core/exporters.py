@@ -1,11 +1,15 @@
 """Multi-format exporters: CSV, JSON, JSONL, SQLite + run manifest."""
 from __future__ import annotations
-import csv, json, sqlite3
+
+import csv
+import json
+import sqlite3
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable
+
 from pydantic import BaseModel
 
-from ..models import RunMeta, RunManifest
+from ..models import RunManifest, RunMeta
 
 
 def _rows(models: Iterable[BaseModel]) -> list[dict]:

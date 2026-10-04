@@ -1,6 +1,8 @@
 """HTML report — sortable, filterable, dark mode."""
 from __future__ import annotations
-import html as H, re
+
+import html as H
+import re
 from collections import Counter
 from pathlib import Path
 

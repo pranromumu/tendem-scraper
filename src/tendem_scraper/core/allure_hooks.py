@@ -1,9 +1,10 @@
 """Allure integration (safe no-op outside a pytest run)."""
 from __future__ import annotations
+
 import contextlib
 
 try:
-    import allure  # noqa: F401
+    import allure
     _HAS = True
 except ImportError:
     _HAS = False

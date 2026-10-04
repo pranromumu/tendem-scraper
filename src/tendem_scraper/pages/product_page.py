@@ -1,9 +1,11 @@
 """Concrete POM: single product detail."""
 from __future__ import annotations
+
 from urllib.parse import urljoin
-from .base_page import BasePage
-from ..core.extractors import clean, PRICE
+
+from ..core.extractors import PRICE, clean
 from ..models import Item
+from .base_page import BasePage
 
 
 class ProductDetailPage(BasePage):

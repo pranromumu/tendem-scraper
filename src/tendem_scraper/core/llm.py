@@ -1,6 +1,8 @@
 """OpenRouter fallback for tricky pages (optional)."""
 from __future__ import annotations
+
 import json
+
 from ..config import settings
 
 SYSTEM = (

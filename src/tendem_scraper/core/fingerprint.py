@@ -4,10 +4,10 @@ Looks at HTML head, script srcs, meta tags, class names and asset hosts to
 guess the platform. Cheap (regex only) and offline.
 """
 from __future__ import annotations
+
 from bs4 import BeautifulSoup
 
 from .presets import PRESETS
-
 
 # Each rule: (preset_name, weight, [list of regex tested against lowercased HTML])
 RULES: list[tuple[str, int, list[str]]] = [
