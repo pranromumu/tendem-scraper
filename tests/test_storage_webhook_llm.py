@@ -7,7 +7,6 @@ from tendem_scraper.core.concurrency import map_concurrent
 from tendem_scraper.core.llm import extract_items_with_llm
 from tendem_scraper.core.proxy import ProxyPool
 
-
 # ---------------------------------------------------------------- proxy
 
 def test_proxy_pool_empty_returns_none():
