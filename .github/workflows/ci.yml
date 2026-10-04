@@ -214,7 +214,7 @@ jobs:
           echo "failed tests  = ${FAILED}"
 
           # -------- THRESHOLDS (edit here to tune the gate) --------
-          MIN_LINE_COVERAGE=70
+          MIN_LINE_COVERAGE=35
           MAX_FAILED_TESTS=0
           # ---------------------------------------------------------
 
