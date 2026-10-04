@@ -31,28 +31,29 @@ def _meta(**overrides) -> RunMeta:
     return RunMeta(**base)
 
 
-def _fake_result():
-    class R:
-        pages = [object()]
-        items = [
+class _FakeResult:
+    """Lightweight stand-in for RunResult — instance attributes, not class."""
+
+    def __init__(self) -> None:
+        self.pages = [object()]
+        self.items = [
             Item(page=1, index=1, title="Widget <b>bad</b>", price="$10",
                  link="https://x/1", image="https://x/1.jpg", text="hi"),
         ]
-        links = [
+        self.links = [
             LinkRow(page=1, text="Home", href="https://x/", type="internal"),
         ]
-        images = [
+        self.images = [
             ImageRow(page=1, src="https://x/1.jpg", alt="", alt_state="empty"),
         ]
-        headings = [HeadingRow(page=1, level=1, text="Welcome")]
-        issues = [
+        self.headings = [HeadingRow(page=1, level=1, text="Welcome")]
+        self.issues = [
             QAIssue(page=1, severity="Medium", check="Image without alt",
                     detail="no alt", where="x"),
         ]
-        tables = [
+        self.tables = [
             TableBlock(page=1, caption="Sales", header=["a", "b"], rows=[["1", "2"]]),
         ]
-    return R()
 
 
 def test_esc_escapes_html():
@@ -61,7 +62,7 @@ def test_esc_escapes_html():
 
 
 def test_build_html_report_contains_expected_strings():
-    html = build_html_report(_meta(), _fake_result())
+    html = build_html_report(_meta(), _FakeResult())
     assert "<!doctype html>" in html
     assert "Scrape report" in html
     assert "Items (1)" in html
@@ -73,7 +74,7 @@ def test_build_html_report_contains_expected_strings():
 
 
 def test_build_html_report_escapes_untrusted_content():
-    html = build_html_report(_meta(), _fake_result())
+    html = build_html_report(_meta(), _FakeResult())
     # The raw <b> from the item title must be escaped
     assert "<b>bad</b>" not in html
     assert "&lt;b&gt;bad&lt;/b&gt;" in html
@@ -81,12 +82,12 @@ def test_build_html_report_escapes_untrusted_content():
 
 def test_build_html_report_shows_preset_and_session():
     meta = _meta(preset="shopify", session="mysite")
-    html = build_html_report(meta, _fake_result())
+    html = build_html_report(meta, _FakeResult())
     assert "shopify" in html
     assert "mysite" in html
 
 
 def test_write_html_report_creates_file(tmp_path: Path):
-    path = write_html_report(tmp_path, _fake_result(), _meta())
+    path = write_html_report(tmp_path, _FakeResult(), _meta())
     assert path.exists()
     assert path.read_text(encoding="utf-8").startswith("<!doctype html>")

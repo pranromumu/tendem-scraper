@@ -1,5 +1,4 @@
 """Tests for the multi-format exporters."""
-import csv
 import json
 import sqlite3
 from datetime import datetime
@@ -37,33 +36,34 @@ def _meta(**overrides) -> RunMeta:
     return RunMeta(**base)
 
 
-def _fake_result():
-    class R:
-        pages = []
-        items = [
+class _FakeResult:
+    """Lightweight stand-in for RunResult — instance attributes, not class."""
+
+    def __init__(self) -> None:
+        self.pages = []
+        self.items = [
             Item(page=1, index=1, title="Widget", price="$10", link="https://x/1",
                  image="https://x/1.jpg", text="hi", fingerprint="fp1"),
             Item(page=1, index=2, title="Gadget", price="$20", link="https://x/2",
                  image="https://x/2.jpg", text="yo", fingerprint="fp2"),
         ]
-        links = [
+        self.links = [
             LinkRow(page=1, text="Home", href="https://x/", type="internal"),
             LinkRow(page=1, text="About", href="https://x/about", type="internal",
                     status="OK", detail="200"),
         ]
-        images = [
+        self.images = [
             ImageRow(page=1, src="https://x/1.jpg", alt="one", alt_state="ok"),
         ]
-        headings = [
+        self.headings = [
             HeadingRow(page=1, level=1, text="Welcome"),
         ]
-        issues = [
+        self.issues = [
             QAIssue(page=1, severity="Low", check="Test", detail="x", where="y"),
         ]
-        tables = [
+        self.tables = [
             TableBlock(page=1, caption="", header=["a", "b"], rows=[["1", "2"], ["3", "4"]]),
         ]
-    return R()
 
 
 def test_write_csv_creates_utf8_bom_file(tmp_path: Path):
@@ -100,7 +100,7 @@ def test_write_jsonl_one_per_line(tmp_path: Path):
 
 def test_write_sqlite_schema_and_rows(tmp_path: Path):
     db = tmp_path / "data.sqlite"
-    write_sqlite(db, _fake_result(), _meta())
+    write_sqlite(db, _FakeResult(), _meta())
     assert db.exists()
 
     con = sqlite3.connect(db)
@@ -120,7 +120,7 @@ def test_write_sqlite_schema_and_rows(tmp_path: Path):
 
 
 def test_export_all_writes_requested_formats(tmp_path: Path):
-    result = _fake_result()
+    result = _FakeResult()
     meta = _meta()
     paths = export_all(tmp_path, result, meta, {"csv", "json", "jsonl", "sqlite"})
 
@@ -135,7 +135,7 @@ def test_export_all_writes_requested_formats(tmp_path: Path):
 
 
 def test_export_all_only_csv(tmp_path: Path):
-    result = _fake_result()
+    result = _FakeResult()
     meta = _meta()
     export_all(tmp_path, result, meta, {"csv"})
     assert (tmp_path / "items.csv").exists()

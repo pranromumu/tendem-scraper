@@ -1,7 +1,5 @@
 """Tests for storage, webhook, llm, proxy, and concurrency helpers."""
-from unittest.mock import MagicMock, patch
-
-import pytest
+from unittest.mock import MagicMock
 
 from tendem_scraper.config import settings
 from tendem_scraper.core import storage, webhook
