@@ -1,2 +1,0 @@
-09:33:01   crawled          1/2  https://example.com
-09:33:01   crawled          2/2  https://example.com/a
