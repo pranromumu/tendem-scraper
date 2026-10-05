@@ -15,7 +15,7 @@ from rich.panel import Panel
 from rich.prompt import Confirm, Prompt
 
 from .core.extractors import find_item_groups
-from .core.fetcher import FetchError, Fetcher
+from .core.fetcher import Fetcher, FetchError
 from .core.fingerprint import detect_preset
 
 console = Console()
@@ -76,9 +76,10 @@ def _fetch_probe(url: str) -> tuple[str, str, str]:
 
 def _check_robots(url: str) -> tuple[bool, str]:
     """Return (allowed, reason)."""
-    import requests
     from urllib import robotparser
     from urllib.parse import urlparse
+
+    import requests
 
     p = urlparse(url)
     base = f"{p.scheme}://{p.netloc}"

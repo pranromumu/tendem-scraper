@@ -40,7 +40,7 @@ dev   = [
 
 [project.scripts]
 tendem-scrape = "tendem_scraper.cli:main"
-tendem-audit = "tendem_scraper.audit_helper:main"
+tendem-audit  = "tendem_scraper.audit_helper:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
@@ -79,6 +79,7 @@ ignore = [
     "B007",     # unused loop var — kept for readability
     "B023",     # closure over loop var — html bound per iteration
     "PLC0415",  # imports inside functions — lazy optional deps (boto3, httpx, playwright)
+    "PLR0911",  # too many return statements — verdict decision trees are clearer as returns
     "PLR0912",  # too many branches — CLI dispatcher
     "PLR0913",  # too many args — Fetcher/Pipeline constructors
     "PLR0915",  # too many statements — _finalise orchestration
