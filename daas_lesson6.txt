@@ -1,0 +1,22 @@
+DAAS LESSON 6 — MY ANSWERS
+
+Q1. What are the 6 things every contract must include?
+Answer:
+  1. What exactly i will deliver
+  2. Payment terms
+  3. Timeline start date and da;ivery date.
+  4. Revisions policy 
+  5. Termination
+  6. Data disclaimer
+
+Q2. For a $500+ direct client, what payment schedule do I
+    require on the first job?
+Answer: 50% upfront (before I start)
+50% on delivery (within 24h of sending the final files)
+Q3. Name 3 red flags that would make me DECLINE a client.
+Answer:
+ 1. Client refuses to sign a written agreement
+ 2.Client wants to pay only after seeing the results
+ 3.Client has no platform history and wants off-platform payment
+Q4. On Upwork, do I need a separate contract?
+Answer: On Upwork/Fiverr: the platform IS your contract. Their terms cover me.

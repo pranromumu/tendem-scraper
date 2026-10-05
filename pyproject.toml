@@ -41,6 +41,7 @@ dev   = [
 [project.scripts]
 tendem-scrape = "tendem_scraper.cli:main"
 tendem-audit  = "tendem_scraper.audit_helper:main"
+tendem-deliver = "tendem_scraper.deliver:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

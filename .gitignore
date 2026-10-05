@@ -18,3 +18,12 @@ build/
 *.egg-info/
 service_menu.md
 intake_reply.txt
+upgrade_plan.txt
+daas_lesson1.txt
+daas_lesson2.txt
+daas_lesson3.txt
+audit_log.txt
+daas_lesson5.txt
+contract_template.txt
+notepad .gitignore
+deliverables/
