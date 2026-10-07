@@ -23,6 +23,7 @@ dependencies = [
     "tenacity>=8.2",
     "python-dotenv>=1.0",
     "allure-pytest>=2.13",
+    "apscheduler>=3.10", 
 ]
 
 [project.optional-dependencies]
@@ -42,6 +43,7 @@ dev   = [
 tendem-scrape = "tendem_scraper.cli:main"
 tendem-audit  = "tendem_scraper.audit_helper:main"
 tendem-deliver = "tendem_scraper.deliver:main"
+tendem-schedule = "tendem_scraper.scheduler.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
