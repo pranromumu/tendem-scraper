@@ -1,0 +1,15 @@
+08:40:39 ▶ fetch page 1           https://books.toscrape.com/
+08:40:39   method           test
+08:40:39   items            3
+08:40:39   links            4
+08:40:39   images           3
+08:40:39   tables           0
+08:40:39   qa issues        0
+08:40:39 ✓ waiting 0s before page 2…
+08:40:39 ▶ fetch page 2           https://books.toscrape.com/page-2.html
+08:40:39   method           test
+08:40:39   items            3
+08:40:39   links            4
+08:40:39   images           3
+08:40:39   tables           0
+08:40:39   qa issues        0
