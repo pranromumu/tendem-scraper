@@ -1,0 +1,2 @@
+No scheduled jobs yet.
+Add one with: tendem-schedule add myshop --url URL --cron "0 8 * * 1"

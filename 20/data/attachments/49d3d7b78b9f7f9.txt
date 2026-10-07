@@ -1,0 +1,8 @@
+✓ Scheduled job created: dup
+  URL:   https://x.com
+  Cron:  * * * * *
+  Preset: auto
+
+Start the daemon to activate: tendem-schedule daemon
+Job 'dup' already exists.
+Use --force to overwrite.

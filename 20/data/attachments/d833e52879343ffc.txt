@@ -1,0 +1,12 @@
+✓ Scheduled job created: clitest
+  URL:   https://x.com
+  Cron:  0 8 * * 1
+  Preset: auto
+
+Start the daemon to activate: tendem-schedule daemon
+                          Scheduled jobs (1)                           
+┏━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━┳━━━━━━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━━━┓
+┃ Name    ┃ Cron      ┃ Preset ┃ URL           ┃ Last run ┃ Status    ┃
+┡━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━╇━━━━━━━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━━━┩
+│ clitest │ 0 8 * * 1 │ auto   │ https://x.com │ —        │ never run │
+└─────────┴───────────┴────────┴───────────────┴──────────┴───────────┘

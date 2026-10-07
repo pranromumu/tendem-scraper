@@ -1,0 +1,7 @@
+✓ Scheduled job created: rem
+  URL:   https://x.com
+  Cron:  * * * * *
+  Preset: auto
+
+Start the daemon to activate: tendem-schedule daemon
+✓ Removed job 'rem'

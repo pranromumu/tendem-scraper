@@ -1,0 +1,12 @@
+✓ Scheduled job created: dup
+  URL:   https://a.com
+  Cron:  * * * * *
+  Preset: auto
+
+Start the daemon to activate: tendem-schedule daemon
+✓ Scheduled job created: dup
+  URL:   https://b.com
+  Cron:  * * * * *
+  Preset: auto
+
+Start the daemon to activate: tendem-schedule daemon
