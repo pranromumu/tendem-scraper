@@ -24,6 +24,7 @@ dependencies = [
     "python-dotenv>=1.0",
     "allure-pytest>=2.13",
     "apscheduler>=3.10", 
+    "tzdata>=2024.1", 
 ]
 
 [project.optional-dependencies]
