@@ -1,0 +1,1 @@
+"""Sinks — push scraped items to external destinations (Google Sheets, S3, ...)."""

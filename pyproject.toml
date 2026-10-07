@@ -25,6 +25,9 @@ dependencies = [
     "allure-pytest>=2.13",
     "apscheduler>=3.10", 
     "tzdata>=2024.1", 
+    "gspread>=6.0",              
+    "google-auth>=2.30",         
+    "google-auth-oauthlib>=1.2", 
 ]
 
 [project.optional-dependencies]

@@ -60,6 +60,7 @@ from .core.reporter import write_html_report
 from .core.resume import Checkpoint
 from .models import QAIssue, RunMeta
 from .pages.registry import PAGE_REGISTRY
+from .sinks.gsheet_sink import GSheetSink
 
 # Global start-time so _finalise() can compute elapsed seconds even before main() resets it.
 _T0 = time.time()
@@ -169,6 +170,14 @@ def _build_parser() -> argparse.ArgumentParser:
     # output
     ap.add_argument("--format", default="csv",
                     help="comma-separated: csv,json,jsonl,sqlite (default: csv)")
+    ap.add_argument("--sink", action="append", default=[],
+                    choices=["gsheet", "s3"],
+                    help="push results to a sink (repeatable): gsheet, s3")
+    ap.add_argument("--sheet-id", help="Google Sheet ID (with --sink gsheet)")
+    ap.add_argument("--sheet-name", default="items",
+                    help="Worksheet name inside the Google Sheet (default: items)")
+    ap.add_argument("--sheet-mode", choices=["replace", "append"], default="replace",
+                    help="Whether to replace or append to the sheet (default: replace)")
     ap.add_argument("--outdir", default=settings.outdir)
     ap.add_argument("--resume", metavar="RUN_DIR", help="resume from a previous run folder")
     ap.add_argument("--s3", action="store_true", help="upload outputs to S3 (needs TS_S3_BUCKET)")
@@ -393,6 +402,23 @@ def _finalise(a, result, resume_dir: str | None, crawl_mode: bool) -> int:
         attach_html("report.html", (out_dir / "report.html").read_text(encoding="utf-8"))
     except Exception:
         pass
+
+    # Google Sheets sink (optional)
+    if "gsheet" in (a.sink or []):
+        if not a.sheet_id:
+            log.warn("--sink gsheet requires --sheet-id. Skipping Google Sheets.")
+        else:
+            try:
+                sink = GSheetSink(
+                    sheet_id=a.sheet_id,
+                    credentials_file="credentials.json",
+                    worksheet=a.sheet_name,
+                    mode=a.sheet_mode,
+                )
+                rows = sink.push(result.items)
+                log.info(f"Pushed {rows} rows to Google Sheet")
+            except Exception as e:
+                log.fail(f"Google Sheets sink failed: {e}")
 
     # S3 (optional)
     s3_uri = None
