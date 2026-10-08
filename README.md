@@ -12,7 +12,7 @@ Allure test report.
 [![Playwright](https://img.shields.io/badge/Playwright-1.44%2B-45ba4b)](https://playwright.dev/python/)
 [![Coverage](https://img.shields.io/badge/coverage-74%25-brightgreen)]()
 [![Branch coverage](https://img.shields.io/badge/branch%20coverage-59%25-yellowgreen)]()
-[![Tests](https://img.shields.io/badge/tests-178%20passed-brightgreen)]()
+[![Tests](https://img.shields.io/badge/tests-227%20passed-brightgreen)]()
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Code style: ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
 
