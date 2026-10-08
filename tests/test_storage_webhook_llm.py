@@ -181,13 +181,21 @@ def test_llm_returns_empty_when_httpx_missing(monkeypatch):
 
 
 def test_llm_happy_path(monkeypatch):
+    """LLM extraction works with Google Gemini response format."""
     monkeypatch.setattr(settings, "openrouter_api_key", "fake-key", raising=False)
-    monkeypatch.setattr(settings, "openrouter_model", "test-model", raising=False)
+    monkeypatch.setattr(settings, "openrouter_model", "gemini-3.5-flash", raising=False)
 
     fake_resp = MagicMock()
+    fake_resp.status_code = 200
     fake_resp.raise_for_status = MagicMock()
     fake_resp.json.return_value = {
-        "choices": [{"message": {"content": '[{"title":"A","price":"$1","link":"","image":"","text":""}]'}}]
+        "candidates": [{
+            "content": {
+                "parts": [{
+                    "text": '[{"title":"A","price":"$1","link":"","image":"","text":""}]'
+                }]
+            }
+        }]
     }
 
     class FakeClient:
