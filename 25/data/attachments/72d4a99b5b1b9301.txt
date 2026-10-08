@@ -1,0 +1,25 @@
+╭────────────────────────────────────────────────────╮
+│ Delivery Helper                                    │
+│ Report folder: reports/scrape_test_20260101_120000 │
+╰────────────────────────────────────────────────────╯
+
+▸ Running QA checks...
+            QA Results             
+┏━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━┓
+┃ Check                  ┃ Result ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━┩
+│ Total rows             │      1 │
+│ Missing titles         │      0 │
+│ Missing prices         │      0 │
+│ Missing links          │      0 │
+│ Missing images         │      0 │
+│ Duplicate fingerprints │      0 │
+│ QA issues (total)      │      0 │
+│ QA issues (HIGH)       │      0 │
+└────────────────────────┴────────┘
+
+✓ QA passed — data looks clean.
+
+▸ ZIP creation skipped (--no-zip)
+
+✓ Done.

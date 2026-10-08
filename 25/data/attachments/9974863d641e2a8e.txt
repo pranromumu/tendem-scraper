@@ -1,0 +1,15 @@
+usage: tendem-scrape [-h] [--static | --render | --interactive]
+                     [--max-pages MAX_PAGES] [--delay DELAY] [--crawl]
+                     [--crawl-max CRAWL_MAX] [--concurrency CONCURRENCY]
+                     [--item-selector ITEM_SELECTOR] [--preset PRESET]
+                     [--page-object {books,listing,product}] [--scroll]
+                     [--infinite] [--infinite-max INFINITE_MAX] [--dedupe]
+                     [--llm] [--validate] [--check-links [N]] [--external]
+                     [--ignore-robots] [--proxy PROXY] [--save-session NAME]
+                     [--use-session NAME] [--list-sessions] [--format FORMAT]
+                     [--sink {gsheet,s3}] [--sheet-id SHEET_ID]
+                     [--sheet-name SHEET_NAME] [--sheet-mode {replace,append}]
+                     [--outdir OUTDIR] [--resume RUN_DIR] [--s3]
+                     [--webhook WEBHOOK] [--open] [--json-logs] [--codegen]
+                     url
+tendem-scrape: error: argument --render: not allowed with argument --static
