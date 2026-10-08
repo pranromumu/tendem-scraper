@@ -1,1 +1,0 @@
-06:32:21 ✗ Invalid cron for job 'bad-cron': Invalid month name "a"
