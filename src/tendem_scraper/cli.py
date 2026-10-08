@@ -181,6 +181,15 @@ def _build_parser() -> argparse.ArgumentParser:
     ap.add_argument("--sink", action="append", default=[],
                     choices=["gsheet", "s3"],
                     help="push results to a sink (repeatable): gsheet, s3")
+        # API mode
+    ap.add_argument("--api-mode", action="store_true",
+                    help="treat the URL as a JSON API endpoint instead of HTML")
+    ap.add_argument("--api-path", default="",
+                    help="path inside JSON to item list (e.g. 'data.products[*]')")
+    ap.add_argument("--field-map", default="",
+                    help="comma-separated field mapping: title=name,price=cost")
+    ap.add_argument("--header", action="append", default=[],
+                    help="custom HTTP header (repeatable): 'Authorization: Bearer X'")
     ap.add_argument("--sheet-id", help="Google Sheet ID (with --sink gsheet)")
     ap.add_argument("--sheet-name", default="items",
                     help="Worksheet name inside the Google Sheet (default: items)")
@@ -234,6 +243,8 @@ def _run_single(a, page_cls, page_kwargs, resume_dir) -> int:
             Checkpoint(Path(resume_dir))  # ensures structure exists
 
         page_kwargs["use_llm"] = getattr(a, "llm", False)
+        if getattr(a, "api_mode", False):
+            return _run_api_mode(a)
 
         result = Pipeline(
             fetcher=fetcher, page_cls=page_cls, page_kwargs=page_kwargs,
@@ -243,6 +254,68 @@ def _run_single(a, page_cls, page_kwargs, resume_dir) -> int:
         fetcher.close()
 
     return _finalise(a, result, resume_dir=resume_dir, crawl_mode=False)
+
+def _run_api_mode(a) -> int:
+    """Fetch a JSON API endpoint and convert it to items."""
+    import requests
+
+    from .core.api_extractor import extract_items_from_json, try_parse_json
+
+    log.stage("api-mode", a.url)
+
+    # Build headers
+    headers = {"User-Agent": UA, "Accept": "application/json"}
+    for h in (a.header or []):
+        if ":" in h:
+            k, v = h.split(":", 1)
+            headers[k.strip()] = v.strip()
+
+    # Fetch
+    proxies = {"http": a.proxy, "https": a.proxy} if a.proxy else None
+    try:
+        r = requests.get(a.url, headers=headers, proxies=proxies, timeout=30)
+    except requests.RequestException as e:
+        log.fail(f"API request failed: {e}")
+        return 1
+
+    if r.status_code >= 400:
+        log.fail(f"API returned HTTP {r.status_code}")
+        return 1
+
+    data = try_parse_json(r.text)
+    if data is None:
+        log.fail("Response is not valid JSON")
+        return 1
+
+    # Build field map
+    field_map = None
+    if a.field_map:
+        field_map = {}
+        for pair in a.field_map.split(","):
+            if "=" in pair:
+                k, v = pair.split("=", 1)
+                field_map[k.strip()] = v.strip()
+
+    items = extract_items_from_json(data, json_path=a.api_path, field_map=field_map)
+    if not items:
+        log.warn("API mode: no items extracted")
+        return 1
+
+    log.info(f"API mode: extracted {len(items)} items")
+    for it in items:
+        log.metric("item", f"{it.title[:60]} | {it.price}")
+
+    # Save as CSV
+    host = re.sub(r'[^A-Za-z0-9.-]', '_', urlparse(a.url).netloc)
+    stamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    out_dir = Path(a.outdir) / f"api_{host}_{stamp}"
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    from .core.exporters import write_csv
+    write_csv(out_dir / "items.csv", [i.model_dump() for i in items])
+
+    log.info(f"Saved to {out_dir / 'items.csv'}")
+    return 0
 
 
 def _run_crawl(a, page_cls, page_kwargs) -> int:
