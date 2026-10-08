@@ -40,3 +40,6 @@ google_sheets_setup.txt
 .env
 devto_connections.txt
 daily_log.txt
+api_mode_notes.txt
+llm_setup.txt
+github_stars.txt
