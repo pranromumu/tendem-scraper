@@ -1,0 +1,2 @@
+02:52:29 ✓ LLM extraction: sending 13 chars → test-model
+02:52:29 ✓ LLM extraction: got 1 items
