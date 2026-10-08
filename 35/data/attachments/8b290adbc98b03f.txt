@@ -1,0 +1,1 @@
+11:54:39 ✗ Job 'failing-job' failed: simulated failure

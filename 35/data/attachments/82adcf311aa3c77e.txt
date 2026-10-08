@@ -1,0 +1,2 @@
+11:54:38 ✓ LLM extraction: sending 13 chars → Gemini/test
+11:54:38 ! Gemini error 400: bad request

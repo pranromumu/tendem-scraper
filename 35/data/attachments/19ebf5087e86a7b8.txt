@@ -1,0 +1,2 @@
+11:54:39 ✓ LLM extraction: sending 13 chars → Gemini/gemini-3.5-flash
+11:54:39 ✓ LLM extraction: got 1 items

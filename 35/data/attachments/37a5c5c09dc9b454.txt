@@ -1,0 +1,3 @@
+11:54:39 ▶ scheduled job: failing-job https://example.com
+11:54:39   cron             0 8 * * 1
+11:54:39   preset           auto
