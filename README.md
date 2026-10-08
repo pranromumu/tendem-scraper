@@ -10,8 +10,8 @@ Allure test report.
 [![Allure Report](https://img.shields.io/badge/Allure-live%20report-orange)](https://pranromumu.github.io/tendem-scraper/)
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/downloads/)
 [![Playwright](https://img.shields.io/badge/Playwright-1.44%2B-45ba4b)](https://playwright.dev/python/)
-[![Coverage](https://img.shields.io/badge/coverage-61%25-green)]()
-[![Tests](https://img.shields.io/badge/tests-70%20passed-brightgreen)]()
+[![Coverage](https://img.shields.io/badge/coverage-51%25-yellow)]()
+[![Tests](https://img.shields.io/badge/tests-84%20passed-brightgreen)]()
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Code style: ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
 
