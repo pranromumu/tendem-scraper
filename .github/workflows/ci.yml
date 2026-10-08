@@ -7,7 +7,7 @@
 #      unit      checksum    quality     Allure      final
 #      tests     chain       metrics     to Pages    verdict
 #
-# The final `gate` job has NO `if: always()` — it depends purely on the
+# The final 'gate' job has NO 'if: always() — it depends purely on the
 # upstream jobs succeeding. If any of them fail, the gate is skipped and
 # the workflow turns red. That is what a real quality gate looks like.
 # ============================================================================
@@ -27,7 +27,7 @@ permissions:
 jobs:
 
   # ────────────────────────────────────────────────────────────────
-  # 1. TEST — run pytest, generate HTML report, upload ALL evidence
+  # 1. TEST  run pytest, generate HTML report, upload ALL evidence
   # ────────────────────────────────────────────────────────────────
   test:
     name: "1 · test"
@@ -56,8 +56,10 @@ jobs:
           mkdir -p artifacts/reports
           pytest -v \
             --cov=tendem_scraper \
+            --cov-branch \
             --cov-report=xml:artifacts/reports/coverage.xml \
             --cov-report=html:artifacts/reports/coverage_html \
+            --cov-report=term-missing \
             --html=artifacts/reports/pytest_report.html \
             --self-contained-html \
             --alluredir=artifacts/allure-results
@@ -94,7 +96,7 @@ jobs:
           include-hidden-files: true
 
   # ────────────────────────────────────────────────────────────────
-  # 2. VERIFY — download artifacts, verify SHA-256 chain of custody
+  # 2. VERIFY download artifacts, verify SHA-256 chain of custody
   # ────────────────────────────────────────────────────────────────
   verify:
     name: "2 · verify"
@@ -128,7 +130,7 @@ jobs:
             && echo "✓ allure-results present"
 
   # ────────────────────────────────────────────────────────────────
-  # 3. METRICS — quality metrics gate (coverage % + test count)
+  # 3. METRICS  quality metrics gate (coverage % + test count)
   # ────────────────────────────────────────────────────────────────
   metrics:
     name: "3 · metrics"
@@ -153,7 +155,7 @@ jobs:
         id: coverage
         run: |
           python - <<'PY'
-          import xml.etree.ElementTree as ET, sys, os, json
+          import xml.etree.ElementTree as ET, os
           tree = ET.parse("downloaded-artifacts/reports/coverage.xml")
           root = tree.getroot()
           line_rate = float(root.attrib.get("line-rate", "0"))
@@ -208,28 +210,39 @@ jobs:
         run: |
           set -e
           LINE="${{ steps.coverage.outputs.line_coverage }}"
+          BRANCH="${{ steps.coverage.outputs.branch_coverage }}"
           FAILED="${{ steps.allure_count.outputs.failed }}"
 
-          echo "line coverage = ${LINE}%"
-          echo "failed tests  = ${FAILED}"
+          echo "line coverage   = ${LINE}%"
+          echo "branch coverage = ${BRANCH}%"
+          echo "failed tests    = ${FAILED}"
 
           # -------- THRESHOLDS (edit here to tune the gate) --------
           MIN_LINE_COVERAGE=50
+          MIN_BRANCH_COVERAGE=40
           MAX_FAILED_TESTS=0
           # ---------------------------------------------------------
 
           python - <<PY
           line = float("${LINE}")
+          branch = float("${BRANCH}")
           failed = int("${FAILED}")
-          min_cov = ${MIN_LINE_COVERAGE}
+          min_line = ${MIN_LINE_COVERAGE}
+          min_branch = ${MIN_BRANCH_COVERAGE}
           max_fail = ${MAX_FAILED_TESTS}
 
           ok = True
-          if line < min_cov:
-              print(f"❌ Coverage {line}% below minimum {min_cov}%")
+          if line < min_line:
+              print(f"❌ Line coverage {line}% below minimum {min_line}%")
               ok = False
           else:
-              print(f"✅ Coverage {line}% >= {min_cov}%")
+              print(f"✅ Line coverage {line}% >= {min_line}%")
+
+          if branch < min_branch:
+              print(f"❌ Branch coverage {branch}% below minimum {min_branch}%")
+              ok = False
+          else:
+              print(f"✅ Branch coverage {branch}% >= {min_branch}%")
 
           if failed > max_fail:
               print(f"❌ Failed tests {failed} > max {max_fail}")
@@ -241,7 +254,7 @@ jobs:
           PY
 
   # ────────────────────────────────────────────────────────────────
-  # 4. PUBLISH — push Allure report to gh-pages (main branch only)
+  # 4. PUBLISH push Allure report to gh-pages (main branch only)
   # ────────────────────────────────────────────────────────────────
   publish:
     name: "4 · publish allure"
@@ -278,7 +291,7 @@ jobs:
           commit_message: "ci: publish allure report for ${{ github.sha }}"
 
   # ────────────────────────────────────────────────────────────────
-  # 5. GATE — final verdict, no `if: always()`, must pass
+  # 5. GATE final verdict, no `if: always()`, must pass
   # ────────────────────────────────────────────────────────────────
   gate:
     name: "5 · gate"
@@ -291,12 +304,13 @@ jobs:
           echo "  CI PIPELINE QUALITY GATE"
           echo "=================================================="
           echo ""
-          echo "  Lint (ruff)          : PASS ✅"
-          echo "  Test execution       : PASS ✅"
-          echo "  Evidence upload      : PASS ✅"
-          echo "  SHA-256 verification : PASS ✅"
-          echo "  Coverage threshold   : PASS ✅"
-          echo "  Failed tests         : 0 ✅"
+          echo "  Lint (ruff)           : PASS ✅"
+          echo "  Test execution        : PASS ✅"
+          echo "  Evidence upload       : PASS ✅"
+          echo "  SHA-256 verification  : PASS ✅"
+          echo "  Line coverage         : PASS ✅"
+          echo "  Branch coverage       : PASS ✅"
+          echo "  Failed tests          : 0 ✅"
           echo ""
           echo "  FINAL GATE: PASS ✅"
           echo "=================================================="
