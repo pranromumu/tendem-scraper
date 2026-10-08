@@ -1,2 +1,0 @@
-06:14:23 ✓ Scheduled 'good-job' → 0 8 * * 1
-06:14:23 ▶ daemon                 Running 1 job(s). Ctrl+C to stop.
