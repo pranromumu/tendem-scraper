@@ -1,10 +1,10 @@
-"""OpenRouter LLM fallback for tricky pages.
+"""Google Gemini LLM fallback for tricky pages.
 
 Used when auto-detection and preset selectors both fail.
-Sends the HTML to an LLM and gets back a structured list of items.
+Sends the HTML to Gemini and gets back a structured list of items.
 
-Works with OpenRouter's free router (model = "openrouter/free"),
-which auto-selects from the currently-available free models.
+Uses Google AI Studio (free tier: 1,500 requests/day).
+Model: gemini-3.5-flash (stable, fast, JSON-capable).
 """
 from __future__ import annotations
 
@@ -13,7 +13,11 @@ import json
 from ..config import settings
 from . import logging as log
 
-SYSTEM = (
+GEMINI_ENDPOINT = (
+    "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
+)
+
+SYSTEM_PROMPT = (
     "You are a web scraping assistant. You receive HTML from a webpage "
     "and extract a list of repeating records (products, listings, articles). "
     "Return ONLY a JSON array of objects. No prose. No markdown fences. "
@@ -26,27 +30,44 @@ SYSTEM = (
 
 
 def _build_payload(html: str, url: str, max_items: int, max_chars: int) -> dict:
-    """Construct the OpenRouter request body."""
+    """Construct the Gemini request body."""
     trimmed = html[:max_chars]
+    prompt = (
+        f"{SYSTEM_PROMPT.replace('{max_items}', str(max_items))}\n\n"
+        f"URL: {url}\n\nHTML:\n{trimmed}"
+    )
     return {
-        "model": settings.openrouter_model or "openrouter/free",
-        "messages": [
-            {"role": "system", "content": SYSTEM.replace("{max_items}", str(max_items))},
-            {"role": "user", "content": f"URL: {url}\n\nHTML:\n{trimmed}"},
-        ],
-        "response_format": {"type": "json_object"},
-        "temperature": 0,
-        "max_tokens": 4096,
+        "contents": [{"parts": [{"text": prompt}]}],
+        "generationConfig": {
+            "temperature": 0,
+            "maxOutputTokens": 8192,
+            "responseMimeType": "application/json",
+        },
     }
 
 
-def _headers() -> dict:
-    return {
-        "Authorization": f"Bearer {settings.openrouter_api_key}",
-        "Content-Type": "application/json",
-        "HTTP-Referer": "https://github.com/pranromumu/tendem-scraper",
-        "X-Title": "Tendem Scraper",
-    }
+def _extract_text(data: dict) -> str:
+    """Pull text out of a Gemini response."""
+    try:
+        candidates = data.get("candidates") or []
+        if not candidates:
+            return ""
+        parts = candidates[0].get("content", {}).get("parts") or []
+        if not parts:
+            return ""
+        return parts[0].get("text", "") or ""
+    except (KeyError, IndexError, TypeError):
+        return ""
+
+
+def _strip_json_fences(content: str) -> str:
+    """Remove ```json ... ``` fences if present."""
+    content = content.strip()
+    if content.startswith("```"):
+        content = content.strip("`")
+        if content.lower().startswith("json"):
+            content = content[4:].lstrip()
+    return content
 
 
 def extract_items_with_llm(
@@ -55,13 +76,15 @@ def extract_items_with_llm(
     max_items: int = 100,
     max_chars: int = 60_000,
 ) -> list[dict]:
-    """Ask the LLM to extract items from raw HTML.
+    """Ask Gemini to extract items from raw HTML.
 
     Returns [] on any failure — the pipeline will fall back gracefully.
     """
     if not settings.openrouter_api_key:
-        log.warn("LLM extraction skipped — no OpenRouter API key in .env")
+        log.warn("LLM extraction skipped — no API key in .env")
         return []
+
+    model = settings.openrouter_model or "gemini-3.5-flash"
 
     try:
         import httpx
@@ -69,51 +92,48 @@ def extract_items_with_llm(
         log.warn("LLM extraction skipped — httpx not installed")
         return []
 
+    endpoint = GEMINI_ENDPOINT.format(model=model)
     payload = _build_payload(html, url, max_items, max_chars)
-    log.info(f"LLM extraction: sending {len(html)} chars → {payload['model']}")
+    log.info(f"LLM extraction: sending {len(html)} chars → Gemini/{model}")
 
-    try:
-        with httpx.Client(timeout=90) as client:
-            r = client.post(
-                "https://openrouter.ai/api/v1/chat/completions",
-                headers=_headers(),
-                json=payload,
-            )
-            r.raise_for_status()
-            data = r.json()
-    except Exception as e:
-        log.warn(f"LLM request failed: {type(e).__name__}: {e}")
+    # Retry up to 3 times on 503 (Google busy) or timeout
+    for attempt in range(3):
+        try:
+            with httpx.Client(timeout=90) as client:
+                r = client.post(endpoint, params={"key": settings.openrouter_api_key}, json=payload)
+            if r.status_code == 200:
+                break
+            if r.status_code in (503, 429):
+                log.warn(f"Gemini busy ({r.status_code}), retrying...")
+                import time
+                time.sleep(3)
+                continue
+            log.warn(f"Gemini error {r.status_code}: {r.text[:200]}")
+            return []
+        except Exception as e:
+            log.warn(f"Gemini request failed ({type(e).__name__}), attempt {attempt + 1}/3")
+            import time
+            time.sleep(3)
+    else:
+        log.warn("Gemini failed after 3 attempts")
         return []
 
-    try:
-        content = data["choices"][0]["message"]["content"]
-    except (KeyError, IndexError, TypeError):
-        log.warn("LLM returned unexpected shape — no choices")
-        return []
-
+    content = _extract_text(r.json())
     if not content:
-        log.warn("LLM returned empty content")
+        log.warn("Gemini returned empty content")
         return []
 
-    # Strip common LLM artifacts
-    content = content.strip()
-    if content.startswith("```"):
-        # Remove ```json ... ``` fences
-        content = content.strip("`")
-        if content.lower().startswith("json"):
-            content = content[4:].lstrip()
-
+    content = _strip_json_fences(content)
     try:
         parsed = json.loads(content)
     except json.JSONDecodeError as e:
-        log.warn(f"LLM returned invalid JSON: {e}")
+        log.warn(f"Gemini returned invalid JSON: {e}")
         return []
 
-    # Normalize to a list
     if isinstance(parsed, dict):
         parsed = parsed.get("items") or parsed.get("data") or []
     if not isinstance(parsed, list):
-        log.warn("LLM returned non-list JSON")
+        log.warn("Gemini returned non-list JSON")
         return []
 
     log.info(f"LLM extraction: got {len(parsed)} items")
