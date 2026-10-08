@@ -23,6 +23,9 @@ tendem-scrape URL --crawl --resume reports/scrape_host_20250115_120000
 # dedupe + strict validation + S3 upload + Slack notify
 tendem-scrape URL --crawl --dedupe --validate --s3 --webhook https://hooks.slack.com/...
 
+# LLM fallback when no items can be detected
+tendem-scrape URL --llm --max-pages 3
+
 # print a POM skeleton
 tendem-scrape URL --codegen
 """
@@ -128,7 +131,10 @@ class MySiteListing(BasePage):
 def _build_parser() -> argparse.ArgumentParser:
     ap = argparse.ArgumentParser(
         prog="tendem-scrape",
-        description="POM scraper v2 — auto-presets, crawl, concurrency, resume, dedupe, multi-format, Allure.",
+        description=(
+            "POM scraper v2 — auto-presets, crawl, concurrency, resume, "
+            "dedupe, multi-format, Allure, LLM fallback."
+        ),
     )
     ap.add_argument("url", help="URL or local .html file")
 
@@ -155,6 +161,8 @@ def _build_parser() -> argparse.ArgumentParser:
     ap.add_argument("--infinite", action="store_true")
     ap.add_argument("--infinite-max", type=int, default=30)
     ap.add_argument("--dedupe", action="store_true", help="drop duplicate items across pages")
+    ap.add_argument("--llm", action="store_true",
+                    help="use OpenRouter LLM fallback when no items are found")
     ap.add_argument("--validate", action="store_true",
                     help="strict mode: exit non-zero if any High-severity QA issue")
     ap.add_argument("--check-links", nargs="?", const=40, type=int, default=0, metavar="N")
@@ -225,6 +233,8 @@ def _run_single(a, page_cls, page_kwargs, resume_dir) -> int:
             log.info(f"Resuming from {resume_dir}")
             Checkpoint(Path(resume_dir))  # ensures structure exists
 
+        page_kwargs["use_llm"] = getattr(a, "llm", False)
+
         result = Pipeline(
             fetcher=fetcher, page_cls=page_cls, page_kwargs=page_kwargs,
             max_pages=a.max_pages, delay=a.delay, ignore_robots=a.ignore_robots,
@@ -252,6 +262,8 @@ def _run_crawl(a, page_cls, page_kwargs) -> int:
         fetcher.close()
 
     log.info(f"Crawl collected {len(pages)} page(s)")
+
+    page_kwargs["use_llm"] = getattr(a, "llm", False)
 
     from bs4 import BeautifulSoup
 
@@ -512,6 +524,8 @@ def main(argv: list[str] | None = None) -> int:
         log.metric("save session", a.save_session)
     if a.validate:
         log.metric("validate", "strict")
+    if a.llm:
+        log.metric("llm fallback", "on")
 
     try:
         if a.crawl:

@@ -36,3 +36,5 @@ job_workflow.txt
 upwork_connects_strategy.txt
 schedules/
 credentials.json
+google_sheets_setup.txt
+.env
