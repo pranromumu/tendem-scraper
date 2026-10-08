@@ -1,0 +1,4 @@
+11:07:50 ▶ scheduled job: test-job https://example.com
+11:07:50   cron             0 8 * * 1
+11:07:50   preset           auto
+11:07:50 ✓ Job 'test-job' finished — 0 items → /tmp/pytest-of-runner/pytest-0/test_run_job_updates_status_on0/reports/scrape_example.com_20261008_110750

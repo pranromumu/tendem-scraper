@@ -1,0 +1,1 @@
+11:07:50 ✓ Uploaded 1 files → s3://my-bucket/scrapes/test_storage_uploads_when_boto0/

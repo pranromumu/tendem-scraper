@@ -1,2 +1,0 @@
-10:22:52 ✓ Connected to Google Sheets (credentials: credentials.json)
-10:22:52 ✓ GSheetSink: wrote 2 rows → sheet abc / items
