@@ -1,9 +1,9 @@
-# Tendem Scraper — Production POM Web-Scraping Framework
+# Tendem Scraper-Production POM Web-Scraping Framework
 
 **One CLI. Every scraping workflow.** Static pages, JavaScript SPAs, infinite
 scroll, whole-site crawls, authenticated sessions, CMS auto-detection,
 concurrency, resume, dedupe, multi-format delivery, and a self-contained
-HTML report — all in one Python package with a 5-job CI pipeline and live
+HTML report-all in one Python package with a 5-job CI pipeline and live
 Allure test report.
 
 [![CI Pipeline Quality Gate](https://github.com/pranromumu/tendem-scraper/actions/workflows/ci.yml/badge.svg)](https://github.com/pranromumu/tendem-scraper/actions/workflows/ci.yml)
