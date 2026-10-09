@@ -1,0 +1,1 @@
+07:54:18 ✓ Session saved → /tmp/pytest-of-runner/pytest-0/test_save_session_writes_file0/newdemo.json

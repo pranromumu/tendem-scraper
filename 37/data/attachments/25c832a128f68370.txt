@@ -1,0 +1,1 @@
+07:54:18 ✓ Reusing session → /tmp/pytest-of-runner/pytest-0/test_apply_session_logs_when_e0/demo.json

@@ -1,5 +1,0 @@
-11:54:29 ✓ LLM extraction: sending 13 chars → Gemini/test
-11:54:29 ! Gemini request failed (RuntimeError), attempt 1/3
-11:54:32 ! Gemini request failed (RuntimeError), attempt 2/3
-11:54:35 ! Gemini request failed (RuntimeError), attempt 3/3
-11:54:38 ! Gemini failed after 3 attempts
