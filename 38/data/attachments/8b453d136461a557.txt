@@ -1,1 +1,0 @@
-04:58:01 ▶ daemon                 Running 1 job(s). Ctrl+C to stop.

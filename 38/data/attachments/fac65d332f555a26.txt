@@ -1,3 +1,0 @@
-04:57:51 ✓ Saved sessions:
-   • a
-   • b

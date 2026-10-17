@@ -1,0 +1,2 @@
+06:04:52 ✓ LLM extraction: sending 13 chars → Gemini/test
+06:04:52 ! Gemini returned invalid JSON: Expecting value: line 1 column 1 (char 0)
