@@ -274,7 +274,7 @@ jobs:
           path: downloaded-artifacts
 
       - name: Generate Allure report
-        uses: simple-elf/allure-report-action@v1
+        uses:  step-security/allure-report-action@v1
         with:
           allure_results: downloaded-artifacts/allure-results
           allure_history: allure-history
