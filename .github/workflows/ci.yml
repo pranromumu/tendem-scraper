@@ -274,11 +274,11 @@ jobs:
           path: downloaded-artifacts
 
       - name: Generate Allure report
-        uses: simple-elf/allure-report-action@v1.15
+        uses: simple-elf/allure-report-action@v1
         with:
           allure_results: downloaded-artifacts/allure-results
           allure_history: allure-history
-          keep_reports: 20
+          gh_pages: gh-pages
 
       - name: Publish Allure report to gh-pages
         uses: peaceiris/actions-gh-pages@v4
