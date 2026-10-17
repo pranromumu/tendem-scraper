@@ -1,0 +1,2 @@
+04:58:00 ✓ LLM extraction: sending 13 chars → Gemini/test
+04:58:00 ! Gemini returned non-list JSON

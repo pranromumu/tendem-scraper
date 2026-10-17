@@ -1,2 +1,0 @@
-07:54:17 ✓ LLM extraction: sending 13 chars → Gemini/test
-07:54:17 ✓ LLM extraction: got 1 items
